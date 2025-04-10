@@ -677,22 +677,31 @@ enable_optimization = st.sidebar.checkbox("Enable Parameter Optimization (Grid S
 
 # --- Define Parameters to Tune (Reflect config.py v4.2) ---
 # Format: "CONFIG_VAR_NAME": ("Display Name", min_val, max_val, num_steps_for_opt, default_val_from_config)
+# --- Define Parameters to Tune (Reflect config.py v4.2) ---
+# Format: "CONFIG_VAR_NAME": ("Display Name", min_val, max_val, num_steps_for_opt, NEW_DEFAULT_VAL)
 params_to_tune = {
-    "RISK_PER_TRADE_PCT": ("Risk Per Trade %", 0.005, 0.05, 5, config.RISK_PER_TRADE_PCT),
-    "BUY_THRESHOLD": ("Buy Threshold (<= Ask)", 0.20, 0.60, 5, config.BUY_THRESHOLD),
-    "DIRECTIONAL_STOP_LOSS_PCT": ("Directional Stop %", 0.05, 0.25, 5, config.DIRECTIONAL_STOP_LOSS_PCT),
-    "ACCUMULATION_STOP_LOSS_PCT": ("Accumulation Stop %", 0.03, 0.20, 4, getattr(config, 'ACCUMULATION_STOP_LOSS_PCT', 0.10)), # Handle potential None
-    "ACCUMULATION_DROP_THRESHOLD": ("Accumulation Drop % >=", 0.02, 0.15, 4, config.ACCUMULATION_DROP_THRESHOLD),
-    "HEDGE_PRICE_DROP_THRESHOLD": ("Hedge Drop % >=", 0.03, 0.20, 4, config.HEDGE_PRICE_DROP_THRESHOLD),
-    "HEDGED_STOP_LOSS_PCT_BASIS": ("Hedged Stop Loss % Basis", 0.01, 0.10, 4, config.HEDGED_STOP_LOSS_PCT_BASIS),
-    "HEDGED_HOLD_AVG_COST_THRESHOLD": ("Hedged Hold Cost Thresh (<)", 0.80, 0.99, 4, config.HEDGED_HOLD_AVG_COST_THRESHOLD),
-    "PROFIT_TAKE_PRICE_THRESHOLD": ("Profit Take Price Thresh (> Bid)", 0.50, 0.95, 6, config.PROFIT_TAKE_PRICE_THRESHOLD),
-    "PROFIT_TAKE_SELL_PCT": ("Profit Take Sell %", 0.10, 1.00, 5, config.PROFIT_TAKE_SELL_PCT),
-    # Add other relevant scalar parameters from config.py if desired
-    "COST_BASIS_ARB_THRESHOLD": ("Cost Arb Thresh (< AvgSum)", 0.95, 1.05, 3, config.COST_BASIS_ARB_THRESHOLD),
-    "COST_ARB_ACCUM_SIZE_PCT_OF_BALANCE": ("Cost Arb Size % Bal", 0.01, 0.15, 3, config.COST_ARB_ACCUM_SIZE_PCT_OF_BALANCE),
-    "ARB_THRESHOLD": ("Market Arb Spread Thresh", 0.001, 0.02, 4, config.ARB_THRESHOLD),
-    "ARB_BUY_SIZE_PCT_OF_BALANCE": ("Market Arb Size % Bal", 0.02, 0.20, 3, config.ARB_BUY_SIZE_PCT_OF_BALANCE),
+    "RISK_PER_TRADE_PCT": ("Risk Per Trade %", 0.03, 0.05, 5, 0.04),  # Default: 4% (mid-range)
+    "BUY_THRESHOLD": ("Buy Threshold (<= Ask)", 0.40, 0.80, 5, 0.55), # Default: 55% (mid-point of your new range, allows buying up to 55c initially)
+
+    # Stop Losses - Defaults often start mid-range, adjust based on risk tolerance
+    "DIRECTIONAL_STOP_LOSS_PCT": ("Directional Stop %", 0.05, 0.25, 5, 0.125), # Default: 15% (allows reasonable price movement against entry)
+    "ACCUMULATION_STOP_LOSS_PCT": ("Accumulation Stop %", 0.03, 0.20, 4, 0.08), # Default: 8% (often tighter than directional) - Set to None if you prefer config default logic
+    "HEDGED_STOP_LOSS_PCT_BASIS": ("Hedged Stop Loss % Basis", 0.01, 0.10, 4, 0.05), # Default: 5%
+
+    # Thresholds for Action - Defaults often require some noticeable price change
+    "ACCUMULATION_DROP_THRESHOLD": ("Accumulation Drop % >=", 0.02, 0.15, 4, 0.07), # Default: 7% drop to consider accumulating
+    "HEDGE_PRICE_DROP_THRESHOLD": ("Hedge Drop % >=", 0.03, 0.20, 4, 0.10),  # Default: 10% drop to consider hedging
+    "HEDGED_HOLD_AVG_COST_THRESHOLD": ("Hedged Hold Cost Thresh (<)", 0.80, 0.99, 4, 0.97), # Default: Hold hedge if cost < 97c
+
+    # Profit Taking - Default to taking profit when price is quite favourable
+    "PROFIT_TAKE_PRICE_THRESHOLD": ("Profit Take Price Thresh (> Bid)", 0.50, 0.95, 6, 0.85), # Default: Consider selling YES if bid > 85c
+    "PROFIT_TAKE_SELL_PCT": ("Profit Take Sell %", 0.10, 1.00, 5, 0.75), # Default: Sell 75% of position when taking profit
+
+    # Arbitrage Settings - Defaults often look for smaller, clearer opportunities
+    "COST_BASIS_ARB_THRESHOLD": ("Cost Arb Thresh (< AvgSum)", 0.95, 1.05, 3, 0.99), # Default: Look for cost basis < 99c
+    "COST_ARB_ACCUM_SIZE_PCT_OF_BALANCE": ("Cost Arb Size % Bal", 0.01, 0.15, 3, 0.05), # Default: Use 5% balance for cost arb
+    "ARB_THRESHOLD": ("Market Arb Spread Thresh", 0.001, 0.02, 4, 0.005), # Default: Look for >0.5% market spread for arb
+    "ARB_BUY_SIZE_PCT_OF_BALANCE": ("Market Arb Size % Bal", 0.02, 0.20, 3, 0.10), # Default: Use 10% balance for market arb
 }
 
 config_overrides = {}
