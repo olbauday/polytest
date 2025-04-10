@@ -1,0 +1,49 @@
+{
+    "global_current_balance": 112.22,
+    "global_total_realized_pl": -1.7161999999999935,
+    "all_market_data": {
+        "carney": {
+            "bets_list": [
+                {
+                    "id": "22837e1d-5a76-4c0b-b44d-7eaccff4af5d",
+                    "amount": 25.0232,
+                    "price": 0.62,
+                    "side": "YES"
+                },
+                {
+                    "id": "3642f99f-6a77-4a1a-b37a-c751a151e07e",
+                    "amount": 17.758399999999998,
+                    "price": 0.44,
+                    "side": "NO"
+                }
+            ],
+            "transaction_log": [
+                {
+                    "ts": "2025-04-05 09:32:11",
+                    "type": "MANUAL_ADD",
+                    "side": "YES",
+                    "shares": 40.36,
+                    "price": 0.62,
+                    "cash_flow": -25.02,
+                    "balance": 129.98
+                },
+                {
+                    "ts": "2025-04-05 09:38:42",
+                    "type": "MANUAL_ADD",
+                    "side": "NO",
+                    "shares": 40.36,
+                    "price": 0.44,
+                    "cash_flow": -17.76,
+                    "balance": 112.22
+                }
+            ],
+            "last_yes_price": ".58",
+            "last_no_price": ".41",
+            "adv": "inf",
+            "position_state": "HEDGED",
+            "directional_stop_loss": null,
+            "last_entry_side": null,
+            "is_test_market": false
+        }
+    }
+}
