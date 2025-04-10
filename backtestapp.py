@@ -2,7 +2,7 @@
 
 import math
 import logging
-from . import config # Make sure config is imported
+import config # Make sure config is imported
 # Assuming you have utils or similar for formatting/calculations
 # from . import utils
 
