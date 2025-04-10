@@ -3,7 +3,7 @@ import math
 import logging
 
 # --- Version ---
-VERSION = "4.2"    # Version identifier for the application (updated for change)
+VERSION = "4.3" # Updated version number for MIN_BUY_PRICE change and default alignment
 
 # --- File Paths ---
 SAVE_FILE = f"trading_data_v{VERSION}.json" # Filename for saving application state
@@ -14,51 +14,46 @@ LOG_LEVEL = logging.DEBUG # Level of detail: DEBUG, INFO, WARNING, ERROR, CRITIC
 LOG_FORMAT = '%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s'
 
 # --- Core Risk & Stop-Loss Parameters ---
-RISK_PER_TRADE_PCT = 0.01       # Risk % of global balance on new directional trades
-DIRECTIONAL_STOP_LOSS_PCT = 0.15 # Base stop loss % below entry/avg price for directional trades
-ACCUMULATION_STOP_LOSS_PCT = 0.10 # Tighter stop loss % used specifically when sizing Accumulation buys
-                                 # Set to None to use DIRECTIONAL_STOP_LOSS_PCT
-HEDGED_STOP_LOSS_PCT_BASIS = 0.05 # Exit HEDGED/COST_ARB if unrealized loss > 5% of total cost basis...
+# --- Defaults aligned with suggested app.py settings (as of last discussion) ---
+RISK_PER_TRADE_PCT = 0.04       # Default Risk % (app.py suggested default: 4%)
+DIRECTIONAL_STOP_LOSS_PCT = 0.15 # Default Base stop loss % (app.py suggested default: 15%)
+ACCUMULATION_STOP_LOSS_PCT = 0.08 # Default Tighter stop loss % for Accumulation (app.py suggested default: 8%)
+                                 # Set to None to disable specific accum stop and use DIRECTIONAL_STOP_LOSS_PCT
+HEDGED_STOP_LOSS_PCT_BASIS = 0.05 # Default Exit HEDGED/COST_ARB if loss > 5% cost basis (app.py suggested default: 5%)
 # --- Conditional Hold Threshold for Hedged Stop Loss ---
-HEDGED_HOLD_AVG_COST_THRESHOLD = 0.85 # ... UNLESS the average cost per pair is BELOW this threshold.
-                                     # 0.0 = always apply stop loss based on %; 1.0 = never apply % stop loss
+HEDGED_HOLD_AVG_COST_THRESHOLD = 0.97 # Default: Apply % stop loss UNLESS avg cost per pair is BELOW this (app.py suggested default: 97c)
+                                     # 0.0 = always apply % stop loss; 1.0 = never apply % stop loss
 
 # --- Rule Triggers ---
-BUY_THRESHOLD = 0.45 # Price threshold for initial BUY entry (<= ASK price)
+# --- ADDED MIN_BUY_PRICE ---
+MIN_BUY_PRICE = 0.40 # **NEW**: Minimum price (ask) required to initiate a BUY action (YES or NO)
+# --- Updated BUY_THRESHOLD default and comment ---
+BUY_THRESHOLD = 0.55 # Default *Maximum* price (ask) to initiate a BUY (app.py suggested default: 55c)
+                     # Works with MIN_BUY_PRICE. Buy considered if MIN_BUY_PRICE <= ask <= BUY_THRESHOLD.
 
 # --- Profit Taking (Absolute Price) ---
-PROFIT_TAKE_PRICE_THRESHOLD = 0.55  # Trigger profit taking SELL if BID price > this value
-PROFIT_TAKE_SELL_PCT = 0.50       # Sell this percentage of current shares when threshold is met
+PROFIT_TAKE_PRICE_THRESHOLD = 0.85  # Default: Trigger profit taking SELL if BID price > this (app.py suggested default: 85c)
+PROFIT_TAKE_SELL_PCT = 0.75       # Default: Sell this percentage of shares on profit take (app.py suggested default: 75%)
 
 # --- Deprecated Profit Taking (Percentage Gain) ---
-# SELL_THRESHOLDS = { # Profit Taking Tiers (Price >= Avg Cost + % Increase) -> Sell % of CURRENT holdings
-#     0.05: 0.30, # Sell 30% if price up 5% from avg cost
-#     0.10: 0.20, # Sell additional 20% (of remaining) if price up 10% from avg cost
-#     0.15: 0.50, # Sell remaining 50% (of remaining) if price up 15% from avg cost
-# } # NOTE: This is no longer used by the primary profit taking rule (Priority 5)
+# SELL_THRESHOLDS = { ... } # Kept for reference, but marked as not used
 
 # --- Other Rule Triggers ---
-ACCUMULATION_DROP_THRESHOLD = 0.08 # Accumulate more if ASK price drops >= 8% below avg cost
-COST_BASIS_ARB_THRESHOLD = 1.00 # Qualify for COST_BASIS_ARB state if AvgCost_Y + AvgCost_N < this value
-HEDGE_PRICE_DROP_THRESHOLD = 0.12 # Hedge DIRECTIONAL if BID price drops >= 12% against the larger position
+ACCUMULATION_DROP_THRESHOLD = 0.07 # Default: Accumulate if ASK drops >= 7% below avg cost (app.py suggested default: 7%)
+COST_BASIS_ARB_THRESHOLD = 0.99 # Default: Qualify for COST_BASIS_ARB if AvgCost Sum < 99c (app.py suggested default: 99c)
+HEDGE_PRICE_DROP_THRESHOLD = 0.10 # Default: Hedge DIRECTIONAL if BID drops >= 10% against position (app.py suggested default: 10%)
 
 # --- Sizing Overlays ---
-# ADV Cap - Max allocation % of total balance based on market liquidity estimate
 ADV_ALLOCATION_MAP = {
     # ADV $: Max % of Balance
-    1000: 0.05,     # Up to $1k ADV -> Max 5% of balance
-    5000: 0.10,     # Up to $5k ADV -> Max 10% of balance
-    10000: 0.15,    # Up to $10k ADV -> Max 15% of balance
-    50000: 0.20,    # Up to $50k ADV -> Max 20% of balance
-    100000: 0.30,   # Up to $100k ADV -> Max 30% of balance
-    float('inf'): 0.40, # Effectively unlimited ADV -> Max 40% of balance
+    1000: 0.05, 5000: 0.10, 10000: 0.15, 50000: 0.20, 100000: 0.30, float('inf'): 0.40,
 }
-# Specific Sizing Percentages (subject to ADV caps and risk rules)
-COST_ARB_ACCUM_SIZE_PCT_OF_BALANCE = 0.10 # Target size for Cost Basis Arb accumulation buys
-ARB_BUY_SIZE_PCT_OF_BALANCE = 0.10      # Target size for Market Price Arb buys
+# --- Specific Sizing Percentages (Defaults aligned with suggested app.py settings) ---
+COST_ARB_ACCUM_SIZE_PCT_OF_BALANCE = 0.05 # Default size for Cost Basis Arb accumulation (app.py suggested default: 5%)
+ARB_BUY_SIZE_PCT_OF_BALANCE = 0.10      # Default size for Market Price Arb buys (app.py suggested default: 10%)
 
 # --- Market Price Arbitrage ---
-ARB_THRESHOLD = 0.005 # Min price sum deviation from 1.00 for market arb action (e.g., > 1.005 or < 0.995)
+ARB_THRESHOLD = 0.005 # Default Min price sum deviation for market arb (app.py suggested default: 0.5%)
 
 # --- Precision & Tolerances ---
 SHARE_DECIMALS = 2 # Number of decimal places for share quantities
@@ -72,3 +67,11 @@ ZERO_SHARE_THRESHOLD = 0.0001  # Threshold below which share quantities are trea
 POSITION_STATES = ['FLAT', 'DIRECTIONAL_YES', 'DIRECTIONAL_NO', 'HEDGED', 'COST_BASIS_ARB']
 # Tolerance for state determination (HEDGED/COST_ARB vs DIRECTIONAL)
 HEDGE_IMBALANCE_TOLERANCE_SHARES = 1.0 # If abs(yes_shares - no_shares) <= this, consider it potentially HEDGED/COST_ARB
+
+# --- Strategy Feature Flags (Example - Add flags as needed) ---
+ENABLE_MARKET_ARBITRAGE = True
+ENABLE_COST_BASIS_ARBITRAGE = True
+ENABLE_ACCUMULATION = True
+ENABLE_HEDGING = True
+HEDGE_MATCH_SHARES = False # If True, when hedging, buy opposite shares only up to the amount of the primary holding
+# HEDGE_UNWIND_SELL_PCT = 0.50 # Example: % of pairs to unwind in HEDGED state if unwind condition met (add if needed)
